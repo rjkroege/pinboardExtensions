@@ -24,9 +24,15 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
   if (text == "") {
     // No arguments. We require at least one
     valid = false;
-    chrome.omnibox.setDefaultSuggestion({
-      description: '<dim>Enter tags and note for url <url>' + baseUrl + '</url></dim>'
-    });
+    if (baseUrl) {
+      chrome.omnibox.setDefaultSuggestion({
+        description: '<dim>Enter tags and note for page' + baseUrl + '</url></dim>'
+      });
+    } else {
+      chrome.omnibox.setDefaultSuggestion({
+        description: '<dim>Enter tags and note for page</dim>'
+      });
+    }
   } else if (text != "" && chunks.length == 1) {
     // No note, only a tag.
     tags = chunks[0];
@@ -134,25 +140,9 @@ function navigate(url) {
 }
 
 chrome.omnibox.onInputEntered.addListener(function(text) {
+  // It is possible that I need to update the state here?
+  // Or not? Let's be lazy and not do it for now.
 
-  // must update the state based on the text. Refactor...
-  // TODO(rjkroege): update the state.
-
-//  if (/@\d+\b/.test(text)) {
-//    var chunks = text.split('@');
-//    var path = chunks[0];
-//    var line = chunks[1];
-//    navigate(getUrl(path, line));
-//  } else if (text == 'halp') {
-//    // TODO(aa)
-//  } else {
-//    navigate("http://codesearch.google.com/codesearch?" +
-//             "vert=chromium&as_q=" + text);
-//  }
-
-  // Actually do something here
-  // TODO(rjkroege): fire off the URL to pinboard to record the bookmark
-  // or bring up the little page.
   window.console.info('we entered on our command. should make a bookmark now, tags:' +
       tags + " note: " + note);
 
