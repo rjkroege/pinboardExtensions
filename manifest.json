@@ -1,0 +1,15 @@
+{
+  "background_page": "background.html",
+  "description": "Post bookmarks from the Chrome omnibox",
+  "name": "Pinboard post",
+  "omnibox": { "keyword" : "+pin" },
+  "permissions": [
+    "tabs",
+    "http://*"
+  ],
+  "version": "1",
+  "minimum_chrome_version": "9"
+  
+  // TODO(rjkroege): icon here. Use a pinboard icon. The pinboard site's favicon
+  // for example.
+}

@@ -1,0 +1,163 @@
+<script>
+// The url for the tab in which we activated the command.
+var baseUrl;
+
+// The note if any for this pinboard bookmark
+var note;
+
+// The string of tags for this pinboard bookmark
+var tags;
+
+// True if we have sufficient content to actually register
+// a bookmark. The minimum content is at least one tag.
+var valid;
+
+/**
+ * For each entered character, update the default displayed action.
+ */
+chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
+  window.console.info('typed: ' + text)
+  window.console.info('url: ' + baseUrl)
+      
+  var chunks = text.split(' ');
+  
+  if (text == "") {
+    // No arguments. We require at least one
+    valid = false;
+    chrome.omnibox.setDefaultSuggestion({
+      description: '<dim>Enter tags and note for url <url>' + baseUrl + '</url></dim>'
+    });
+  } else if (text != "" && chunks.length == 1) {
+    // No note, only a tag.
+    tags = chunks[0];
+    note = null;
+    valid = true;
+    chrome.omnibox.setDefaultSuggestion({
+      description: 'Tag: <match>' + tags + '</match> ' +
+      '<dim>for url <url>' + baseUrl + '</url></dim>'
+    });
+  } else {
+    // tag and note
+    valid = true;
+    tags = chunks[0];
+    note = chunks.slice(1).join(' ');
+    chrome.omnibox.setDefaultSuggestion({
+      description: 'Tag: <match>' + tags + '</match>' +
+      ' Note: <match>' + note + '</match> <dim>for url <url>' +
+      baseUrl + '</url></dim>'
+    });
+  }
+});
+
+
+function resetState() {
+  baseUrl = null;
+  note = null;
+  tags = null;
+  valid = false;
+}
+
+function resetDefaultSuggestion() {
+  resetState();
+  chrome.omnibox.setDefaultSuggestion({
+    description: 'Add bookmark to pinboard'
+  });
+}
+
+resetDefaultSuggestion();
+
+// Called once after typing the activation keyword.
+// Rests the state and stashes the url.
+chrome.omnibox.onInputStarted.addListener(function() {
+  resetState(); // Reset our state.
+  chrome.tabs.getSelected(null, function(tab) { // Grab the url for use later.
+    baseUrl = tab.url;
+  });
+  chrome.omnibox.setDefaultSuggestion({
+    description: '<dim>Enter tags and note for url <url>' + baseUrl + '</url></dim>'
+  });
+});
+
+chrome.omnibox.onInputCancelled.addListener(function() {
+  resetDefaultSuggestion();
+});
+
+// I no use yet...
+function search(query, callback) {
+  if (query == 'halp')
+    return;
+
+  if (/^re:/.test(query))
+    query = query.substring('re:'.length);
+  else if (/^file:/.test(query))
+    query = 'file:"' + query.substring('file:'.length) + '"';
+  else
+    query = '"' + query + '"';
+
+  var url = "http://www.google.com/codesearch/feeds/search?" +
+      "vert=chromium&as_q=" + query;
+
+  var req = new XMLHttpRequest();
+  req.open("GET", url, true);
+  req.setRequestHeader("GData-Version", "2");
+  req.onreadystatechange = function() {
+    if (req.readyState == 4) {
+      callback(req.responseXML);
+    }
+  }
+  req.send(null);
+  return req;
+}
+
+// I no use this either.
+function getUrl(path, line) {
+  var url = "http://www.google.com/codesearch/p#OAMlx_jo-ck/" + path
+      "&exact_package=chromium";
+  if (line)
+    url += "&l=" + line;
+  return url;
+}
+
+function getEntryUrl(entry) {
+  return getUrl(
+      entry.getElementsByTagName("file")[0].getAttribute("name"),
+      entry.getElementsByTagName("match")[0].getAttribute("lineNumber"));
+  return url;
+}
+
+// I'll need something like this eventually to actually run the popup?
+// Or can I do it all via 
+function navigate(url) {
+  chrome.tabs.getSelected(null, function(tab) {
+    chrome.tabs.update(tab.id, {url: url});
+  });
+}
+
+chrome.omnibox.onInputEntered.addListener(function(text) {
+
+  // must update the state based on the text. Refactor...
+  // TODO(rjkroege): update the state.
+
+//  if (/@\d+\b/.test(text)) {
+//    var chunks = text.split('@');
+//    var path = chunks[0];
+//    var line = chunks[1];
+//    navigate(getUrl(path, line));
+//  } else if (text == 'halp') {
+//    // TODO(aa)
+//  } else {
+//    navigate("http://codesearch.google.com/codesearch?" +
+//             "vert=chromium&as_q=" + text);
+//  }
+
+  // Actually do something here
+  // TODO(rjkroege): fire off the URL to pinboard to record the bookmark
+  // or bring up the little page.
+  window.console.info('we entered on our command. should make a bookmark now, tags:' +
+      tags + " note: " + note);
+
+  if (valid) {
+    // TODO(rjkroege): xhr to pinboard.
+  }
+});
+</script>
