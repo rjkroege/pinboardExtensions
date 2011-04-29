@@ -88,55 +88,37 @@ chrome.omnibox.onInputCancelled.addListener(function() {
   resetDefaultSuggestion();
 });
 
-// I no use yet...
-function search(query, callback) {
-  if (query == 'halp')
-    return;
+// Constructs an API url for pinboard. All urls have a standard
+// structure: a dictionary of key/value pairs, an actual method
+// name and authentication data.
+function vendURL(method, user, pass, dict) {
+  var url = 'https://' + user + ':' + pass + '@api.pinboard.in/v1/' + method + '?';
+  var keyval = [];
+  for (var key in dict) {
+    keyval.push(key + '=' + encodeURI(dict[key]));
+  }
+  url = url + (keyval.join('&'));
+  return url;
+}
 
-  if (/^re:/.test(query))
-    query = query.substring('re:'.length);
-  else if (/^file:/.test(query))
-    query = 'file:"' + query.substring('file:'.length) + '"';
-  else
-    query = '"' + query + '"';
-
-  var url = "http://www.google.com/codesearch/feeds/search?" +
-      "vert=chromium&as_q=" + query;
-
+// TODO(rjkroege): get auth info from a config page.
+function trySavingBookmark(url) {
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
-  req.setRequestHeader("GData-Version", "2");
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
-      callback(req.responseXML);
+      if (req.status != 200 &&
+          req.responseXML.childNodes[0].attributes['code'].value != 'done') {
+        // We have a problem
+        // TODO(rjkroege): retry here a few times with growing backoff
+        // TODO(rjkroege): need to track the timeout before we add retry so
+        // we preserve the bookmark time. (Or does it matter very much?)
+        // Worry about several bookmark requests in flight at a time?
+        alert('Posting the bookmark did not succeed.');
+      }
     }
   }
   req.send(null);
-  return req;
-}
-
-// I no use this either.
-function getUrl(path, line) {
-  var url = "http://www.google.com/codesearch/p#OAMlx_jo-ck/" + path
-      "&exact_package=chromium";
-  if (line)
-    url += "&l=" + line;
-  return url;
-}
-
-function getEntryUrl(entry) {
-  return getUrl(
-      entry.getElementsByTagName("file")[0].getAttribute("name"),
-      entry.getElementsByTagName("match")[0].getAttribute("lineNumber"));
-  return url;
-}
-
-// I'll need something like this eventually to actually run the popup?
-// Or can I do it all via 
-function navigate(url) {
-  chrome.tabs.getSelected(null, function(tab) {
-    chrome.tabs.update(tab.id, {url: url});
-  });
 }
 
 chrome.omnibox.onInputEntered.addListener(function(text) {
@@ -147,7 +129,18 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
       tags + " note: " + note);
 
   if (valid) {
-    // TODO(rjkroege): xhr to pinboard.
+    // insert the necessary parameters here
+    var dict = {
+      url: baseUrl,
+      description: 'todo',
+      extended: note,
+      tags: tags
+    };
+    // TODO(rjkroege): strip the password.
+    var url = vendURL('posts/add', 'rjkroege', 'foo', dict);
+    // comment out
+    // trySavingBookmark(url);
+    window.console.info('rest api: sending url <' + url + '>');
   }
 });
 </script>
