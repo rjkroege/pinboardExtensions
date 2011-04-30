@@ -1,0 +1,17 @@
+/*
+    CSS for the styling the password/user page
+*/
+body {
+	font: medium "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+	margin: 30px;
+}
+body div {
+	font-size: x-large;
+	margin-bottom: 18px;
+}
+table {
+	font-size: small;
+}
+td:first-child {
+	width: 320px;
+}

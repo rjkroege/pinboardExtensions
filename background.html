@@ -12,6 +12,9 @@ var tags;
 // a bookmark. The minimum content is at least one tag.
 var valid;
 
+// Pinboard user name and password combination.
+var properties;
+
 /**
  * For each entered character, update the default displayed action.
  */
@@ -26,7 +29,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
     valid = false;
     if (baseUrl) {
       chrome.omnibox.setDefaultSuggestion({
-        description: '<dim>Enter tags and note for page' + baseUrl + '</url></dim>'
+        description: '<dim>Enter tags and note for page: <url>' + baseUrl + '</url></dim>'
       });
     } else {
       chrome.omnibox.setDefaultSuggestion({
@@ -123,24 +126,46 @@ function trySavingBookmark(url) {
 
 chrome.omnibox.onInputEntered.addListener(function(text) {
   // It is possible that I need to update the state here?
-  // Or not? Let's be lazy and not do it for now.
+  // Let's be lazy and not do it for now and assume that it's correct
+  // from the last update from a typed character.
 
   window.console.info('we entered on our command. should make a bookmark now, tags:' +
       tags + " note: " + note);
 
   if (valid) {
-    // insert the necessary parameters here
-    var dict = {
-      url: baseUrl,
-      description: 'todo',
-      extended: note,
-      tags: tags
-    };
-    // TODO(rjkroege): strip the password.
-    var url = vendURL('posts/add', 'rjkroege', 'foo', dict);
-    // comment out
-    // trySavingBookmark(url);
-    window.console.info('rest api: sending url <' + url + '>');
+    chrome.extension.sendRequest({greeting: "hello"}, function(response) {
+      console.log("auth: " + response.pinboardName + " " + response.pinboardPassword);
+
+      // insert the necessary parameters here
+      // TODO(rjkroege): better error checking. Invalid perms, invalid yada...
+      var dict = {
+        url: baseUrl,
+        description: 'todo',
+        extended: note,
+        tags: tags
+      };
+      var url = vendURL('posts/add', response.pinboardName, response.pinboardPassword, dict);
+      window.console.info('rest api: sending url <' + url + '>');
+      // uncomment to run.
+      // trySavingBookmark(url);
+    });
   }
 });
+
+/**
+ * Get properties from the options page.
+ * Do this onload.
+ */
+function getTheProperties(argument) {
+  chrome.extension.sendRequest({greeting: "hello"}, function(response) {
+    properties = response;
+    console.log(response.srcLocation);
+  });
+}
+
+// Actually get some properties.
+getTheProperties();
+
+// TODO(rjkroege): some sort of error
+
 </script>
