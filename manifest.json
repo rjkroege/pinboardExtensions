@@ -3,9 +3,12 @@
   "description": "Post bookmarks from the Chrome omnibox",
   "name": "Pinboard post",
   "omnibox": { "keyword" : "+pin" },
+  
+  // Do I need http://* or not?
+  // I don't think so.
   "permissions": [
     "tabs",
-    "http://*",
+//    "http://*",
     "https://api.pinboard.in/*"
   ],
   "version": "1",
