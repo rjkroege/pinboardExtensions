@@ -5,6 +5,9 @@ var baseUrl;
 // The note if any for this pinboard bookmark
 var note;
 
+// The title of the webpage
+var title;
+
 // The string of tags for this pinboard bookmark
 var tags;
 
@@ -63,6 +66,7 @@ function resetState() {
   baseUrl = null;
   note = null;
   tags = null;
+  title = null;
   valid = false;
 }
 
@@ -81,6 +85,7 @@ chrome.omnibox.onInputStarted.addListener(function() {
   resetState(); // Reset our state.
   chrome.tabs.getSelected(null, function(tab) { // Grab the url for use later.
     baseUrl = tab.url;
+    title = tab.title;
   });
   chrome.omnibox.setDefaultSuggestion({
     description: '<dim>Enter tags and note for url <url>' + baseUrl + '</url></dim>'
@@ -104,12 +109,13 @@ function vendURL(method, user, pass, dict) {
   return url;
 }
 
-// TODO(rjkroege): get auth info from a config page.
 function trySavingBookmark(url) {
+  console.info('trySavingBookmark');
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
   req.onreadystatechange = function() {
     if (req.readyState == 4) {
+      console.info('completed the xhr?');
       if (req.status != 200 &&
           req.responseXML.childNodes[0].attributes['code'].value != 'done') {
         // We have a problem
@@ -117,38 +123,49 @@ function trySavingBookmark(url) {
         // TODO(rjkroege): need to track the timeout before we add retry so
         // we preserve the bookmark time. (Or does it matter very much?)
         // Worry about several bookmark requests in flight at a time?
-        alert('Posting the bookmark did not succeed.');
+        alert('Shucks. Posting the bookmark did not succeed.');
       }
     }
   }
   req.send(null);
 }
 
+/**
+ * Fetches the property values from local storage.
+ */
+function getSavedProps() {
+  var props = {};
+  props['pinboardName'] = localStorage['pinboardName'];
+  props['pinboardPassword'] = localStorage['pinboardPassword'];
+  return props;
+} 
+
+
 chrome.omnibox.onInputEntered.addListener(function(text) {
   // It is possible that I need to update the state here?
   // Let's be lazy and not do it for now and assume that it's correct
   // from the last update from a typed character.
 
-  window.console.info('we entered on our command. should make a bookmark now, tags:' +
-      tags + " note: " + note);
+  window.console.info('we entered on our command. should make a bookmark now, tags: ' +
+      tags + ' note: ' + note);
 
+  window.console.info('valid: ' + valid);
   if (valid) {
-    chrome.extension.sendRequest({greeting: "hello"}, function(response) {
-      console.log("auth: " + response.pinboardName + " " + response.pinboardPassword);
+    var response = getSavedProps();
+    console.log("auth: " + response.pinboardName + " " + response.pinboardPassword);
 
-      // insert the necessary parameters here
-      // TODO(rjkroege): better error checking. Invalid perms, invalid yada...
-      var dict = {
-        url: baseUrl,
-        description: 'todo',
-        extended: note,
-        tags: tags
-      };
-      var url = vendURL('posts/add', response.pinboardName, response.pinboardPassword, dict);
-      window.console.info('rest api: sending url <' + url + '>');
-      // uncomment to run.
-      // trySavingBookmark(url);
-    });
+    // insert the necessary parameters here
+    // TODO(rjkroege): better error checking. Invalid perms, invalid yada...
+    var dict = {
+      url: baseUrl,
+      description: title,
+      extended: note,
+      tags: tags
+    };
+    var url = vendURL('posts/add', response.pinboardName, response.pinboardPassword, dict);
+    window.console.info('rest api: sending url <' + url + '>');
+    // uncomment to run.
+    // trySavingBookmark(url);
   }
 });
 
