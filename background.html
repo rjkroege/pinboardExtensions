@@ -165,7 +165,7 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
     var url = vendURL('posts/add', response.pinboardName, response.pinboardPassword, dict);
     window.console.info('rest api: sending url <' + url + '>');
     // uncomment to run.
-    // trySavingBookmark(url);
+    trySavingBookmark(url);
   }
 });
 
