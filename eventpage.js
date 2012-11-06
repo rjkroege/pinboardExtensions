@@ -1,4 +1,3 @@
-<script>
 // The url for the tab in which we activated the command.
 var baseUrl;
 
@@ -185,4 +184,3 @@ getTheProperties();
 
 // TODO(rjkroege): some sort of error
 
-</script>
