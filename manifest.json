@@ -2,7 +2,7 @@
   "manifest_version": 2,
   
  "background": {
-    "scripts": ["eventPage.js"],
+    "scripts": ["eventpage.js"],
     "persistent": false
   },
 

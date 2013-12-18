@@ -1,82 +1,91 @@
-// The url for the tab in which we activated the command.
-var baseUrl;
 
-// The note if any for this pinboard bookmark
-var note;
+function Pinmark() {
+    // The url for the tab in which we activated the command.
+    this.base_url_ = null;
 
-// The title of the webpage
-var title;
+    // The note if any for this pinboard bookmark
+    this.note_ = null;
 
-// The string of tags for this pinboard bookmark
-var tags;
+    // The title of the webpage
+    this.title_ = null;
 
-// True if we have sufficient content to actually register
-// a bookmark. The minimum content is at least one tag.
-var valid;
+    // The string of tags for this pinboard bookmark
+    this.tags_ = null;
+
+    // True if we have sufficient content to actually register
+    // a bookmark. The minimum content is at least one tag.
+    this.valid_ = false;
+}
 
 // Pinboard user name and password combination.
-var properties;
+Pinmark.prototype.properties_ = null;
 
-/**
- * For each entered character, update the default displayed action.
- */
-chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
+Pinmark.prototype.onInputChanged = function(text, suggest) {
   window.console.info('typed: ' + text)
-  window.console.info('url: ' + baseUrl)
+  window.console.info('url: ' + this.base_url_)
       
   var chunks = text.split(' ');
   
   if (text == "") {
     // No arguments. We require at least one
-    valid = false;
-    if (baseUrl) {
+    this.valid_ = false;
+    if (this.base_url_) {
       chrome.omnibox.setDefaultSuggestion({
-        description: '<dim>Enter tags and note for page: <url>' + baseUrl + '</url></dim>'
+        description: '<dim>Enter this.tags_ and this.note_ for page: <url>' + this.base_url_ + '</url></dim>'
       });
     } else {
       chrome.omnibox.setDefaultSuggestion({
-        description: '<dim>Enter tags and note for page</dim>'
+        description: '<dim>Enter this.tags_ and this.note_ for page</dim>'
       });
     }
   } else if (text != "" && chunks.length == 1) {
-    // No note, only a tag.
-    tags = chunks[0];
-    note = null;
-    valid = true;
+    // No this.note_, only a tag.
+    this.tags_ = chunks[0];
+    this.note_ = null;
+    this.valid_ = true;
     chrome.omnibox.setDefaultSuggestion({
-      description: 'Tag: <match>' + tags + '</match> ' +
-      '<dim>for url <url>' + baseUrl + '</url></dim>'
+      description: 'Tag: <match>' + this.tags_ + '</match> ' +
+      '<dim>for url <url>' + this.base_url_ + '</url></dim>'
     });
   } else {
-    // tag and note
-    valid = true;
-    tags = chunks[0];
-    note = chunks.slice(1).join(' ');
+    // tag and this.note_
+    this.valid_ = true;
+    this.tags_ = chunks[0];
+    this.note_ = chunks.slice(1).join(' ');
     chrome.omnibox.setDefaultSuggestion({
-      description: 'Tag: <match>' + tags + '</match>' +
-      ' Note: <match>' + note + '</match> <dim>for url <url>' +
-      baseUrl + '</url></dim>'
+      description: 'Tag: <match>' + this.tags_ + '</match>' +
+      ' Note: <match>' + this.note_ + '</match> <dim>for url <url>' +
+      this.base_url_ + '</url></dim>'
     });
   }
-});
-
-
-function resetState() {
-  baseUrl = null;
-  note = null;
-  tags = null;
-  title = null;
-  valid = false;
 }
 
-function resetDefaultSuggestion() {
-  resetState();
+/**
+ * Forces the pinmark record to a consistent state.
+ */
+Pinmark.prototype.resetState = function() {
+  this.base_url_ = null;
+  this.note_ = null;
+  this.tags_ = null;
+  this.title_ = null;
+  this.valid_ = false;
+}
+
+/**
+ * TODO(rjkroege): what does this do?
+ */
+Pinmark.prototype.resetDefaultSuggestion = function() {
+  this.resetState();
   chrome.omnibox.setDefaultSuggestion({
-    description: 'Add bookmark to pinboard'
+      description: 'Add bookmark to pinboard'
   });
 }
 
-resetDefaultSuggestion();
+/**
+ * For each entered character, update the default displayed action.
+ */
+chrome.omnibox.onInputChanged.addListener( /* insert bind call here */ );
+
 
 // Called once after typing the activation keyword.
 // Rests the state and stashes the url.
